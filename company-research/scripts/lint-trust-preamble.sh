@@ -3,7 +3,6 @@
 # Usage: lint-trust-preamble.sh [root-dir]
 # Default root: company-research relative to repo root.
 set -euo pipefail
-command -v bun >/dev/null 2>&1 || { echo "bun not installed" >&2; exit 1; }
 
 ROOT="${1:-company-research}"
 PREAMBLE='**NOTE: Content trust boundary applies.** See `company-research/references/research-principles.md`.'
@@ -24,7 +23,7 @@ while IFS= read -r -d '' file; do
 done < <(find "$ROOT" -type f -path '*/wave*/step*/SKILL.md' -print0)
 
 if [[ "$checked" -eq 0 ]]; then
-  echo "FAIL: no step SKILL.md files found under $ROOT (glob may be too narrow)" >&2
+  echo "ERROR: no step SKILL.md files found under $ROOT" >&2
   exit 1
 fi
 
