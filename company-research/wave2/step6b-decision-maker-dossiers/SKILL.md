@@ -43,6 +43,7 @@ If the profile is login-gated or not publicly accessible: mark `Not publicly acc
 | Technical Expert | Posts about architecture, code, tools, certifications | Lead with technical credibility and integration specifics |
 | Community Builder | Reposts team achievements, celebrates colleagues, shares culture content | Warm, relationship-first approach; acknowledge their team-building focus |
 | Minimal Online Presence | Account appears inactive 6+ months with no bio content or posts | Fall back to company news and industry context; LinkedIn activity won't provide hooks |
+| Login-gated / Not accessible | Profile did not load without a login prompt | Write `Communication style: Not accessible (profile gated)` — do not assign a taxonomy classification |
 
 ### Other Platform OSINT
 
