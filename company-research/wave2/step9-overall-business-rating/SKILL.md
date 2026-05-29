@@ -34,6 +34,8 @@ Provide a 2–3 sentence rationale. Note: a lower score often signals more BPO o
 
 **Sample size caveat:** If fewer than 15 total reviews were found across all Step 8 platforms combined, note in the rationale: `⚠️ Low sample: score based on [N] total reviews across [platforms] — Confidence: LOW. Treat as directional only.` If zero reviews were found across all platforms: write `Rating: N/A — insufficient review data. Confidence: LOW.`
 
+**Provisional qualifier (≤5 reviews):** When 5 or fewer total reviews are found across all platforms, append: `⚠️ Provisional — based on [N] reviews only. Treat as directional, not diagnostic.`
+
 ## Output schema
 
 See `schemas.step-9` in `company-research/output-schemas.json`. Fields summarized:

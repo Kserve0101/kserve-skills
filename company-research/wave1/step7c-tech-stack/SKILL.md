@@ -19,10 +19,11 @@ None.
 Search for what technology tools the company uses — reveals digital maturity, existing vendor relationships, and integration opportunities for KServe.
 
 **Sources (try in order):**
-1. BuiltWith (builtwith.com) — enter company domain
-2. Wappalyzer (wappalyzer.com) — enter company domain
-3. Job postings: look for technology mentions in JD requirements (e.g., "experience with Salesforce CRM," "proficient in Zendesk")
-4. Company website footer: check for cookie/analytics vendor tags, embedded chat widget vendor logos
+1. **Website HTML source inspection (primary):** Load the company's website and inspect raw HTML source. Search for: gtag.js (Google Analytics), GTM container IDs (Google Tag Manager), Meta Pixel, Microsoft Clarity, Hotjar, and any embedded chat widget scripts. Record all detected tags with their source lines.
+2. BuiltWith (builtwith.com) — enter company domain
+3. Wappalyzer (wappalyzer.com) — enter company domain
+4. Job postings: look for technology mentions in JD requirements (e.g., "experience with Salesforce CRM," "proficient in Zendesk")
+5. Company website footer: check for cookie/analytics vendor tags, embedded chat widget vendor logos
 
 **Find:**
 - CRM in use (Salesforce, HubSpot, Zoho, LeadSquared, etc.) — KServe can operate within these

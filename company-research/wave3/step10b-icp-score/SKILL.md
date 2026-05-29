@@ -39,6 +39,14 @@ Compute a scored Ideal Customer Profile rating (0–100) for this company as a K
 | Social presence | Active posting + meaningful follower base (Step 12) | 5 | Active (≥2×/month + above-threshold engagement): 5 · Inactive or very small: 0 |
 | Data confidence | Average confidence across Steps 2–9 (Step DATA QUALITY tally) | 5 | Mostly HIGH: 5 · Mixed: 3 · Mostly LOW/MED: 0 |
 
+**Review quality cap:** When fewer than 6 total reviews were found across all platforms in Step 8, cap the Review quality score at 4 pts regardless of numerical rating. This prevents 1–2 reviews from producing a misleadingly high pain signal.
+
+**Decision-maker access definition:** "Accessible" means: (a) the LinkedIn profile loads without a login prompt or paywall, AND (b) the name on the profile matches the MCA director record. If either condition fails, score as "None accessible."
+
+**Social presence fallback:** If posting frequency cannot be determined because the platform login-gates historical posts, use LinkedIn follower count as a proxy: >1,000 LinkedIn followers = 3 pts (not 0). For Instagram or Facebook consumer accounts: do not apply this fallback — use 0 pts when posting frequency is gated. Below 1,000 LinkedIn followers = 0 pts.
+
+**Checker enforcement:** This enforcement applies to the **markdown output** format of Step 10B, not to the JSON envelope breakdown field. The Checker reads the rendered markdown and rejects bare numbers without reasoning. Each dimension line in the output must include: `[X/Y] — [reason based on evidence from prior steps]`. Reject output like `Industry match: 15/15` without a reason.
+
 **Total: 100 points**
 
 **Tier thresholds (visible labels):**

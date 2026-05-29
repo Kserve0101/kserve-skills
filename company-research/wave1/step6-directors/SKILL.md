@@ -32,7 +32,9 @@ This protects downstream Step 6B, Step 15, and any renderer or sibling skill fro
 
 ## Instructions
 
-Pull current directors from MCA. For each: Full name · Designation (MD, Director, Independent Director, etc.) · DIN (Director Identification Number).
+Pull current directors from MCA (via Tofler/Zauba Corp). For each: Full name · Designation (MD, Director, Independent Director, etc.) · DIN (Director Identification Number — MCA via Tofler/Zauba Corp is the only authoritative source. If not found there, write `DIN: Not found` — do not infer from other sources).
+
+**Past/ceased directors:** Also collect past directors with their cessation dates (from MCA filing history via Tofler/Zauba Corp). List them in a separate section. Flag any cessation within the last 2 years from the research date (today's date when research is conducted) as a BD signal: `⚠️ Recent cessation: [Name] — [Designation] — ceased [date] — [BD implication, e.g., "may indicate leadership instability or restructuring"]`.
 
 For BD outreach, flag directors likely to be decision-makers for outsourcing: MD, COO, CFO, VP Operations. Mark each with a star (★) to distinguish from board/independent directors.
 
@@ -45,8 +47,8 @@ For BD outreach, flag directors likely to be decision-makers for outsourcing: MD
 If LinkedIn is not accessible for a director: write `LinkedIn: Not publicly accessible`.
 
 **Output format for directors:**
-`★ [Name] — [Designation] — DIN: [XXXXXXXX] — LinkedIn: [URL or "Not accessible"] — Tenure: [X years / ★ NEW (<6 months)]`
-`[Name] — [Designation] — DIN: [XXXXXXXX]` (for non-BD-relevant directors, no LinkedIn lookup needed)
+`★ [Name] — [Designation] — DIN: [XXXXXXXX / Not found] — LinkedIn: [URL or "Not accessible"] — Tenure: [X years / ★ NEW (<6 months)]`
+`[Name] — [Designation] — DIN: [XXXXXXXX / Not found]` (for non-BD-relevant directors, no LinkedIn lookup needed)
 
 **Board Composition Signal:**
 Using the director list from MCA, classify the board as one of:
@@ -68,7 +70,7 @@ Using the director list from MCA, classify the board as one of:
 ## Output schema
 
 See `schemas.step-6` in `company-research/output-schemas.json`. Fields summarized:
-- `directors`: array of objects, each with `name`, `role` (required); `linkedin`, `tenure` (nullable)
+- `directors`: array of objects, each with `name`, `role` (required); `din`, `linkedin`, `tenure` (nullable)
 
 ## Output format
 

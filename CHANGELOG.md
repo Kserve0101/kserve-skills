@@ -5,7 +5,44 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.4.1] — 2026-03-27
+## [1.5.0] — 2026-05-29
+
+### Added — AI Services (C5)
+- **6 new AI services** added to SKILL.md §1 services table: Low Code AI Integrated CRM, Predictive Lead Scoring, Conversation VoiceAI Bot, Sales Enhancer/CX Enhancer, WhatsApp Chatbot, Custom Build
+- **Step 10 HIGH/MEDIUM FIT rules** for all 6 new AI services with explicit signal criteria
+- **CIN, ROC, company type** fields added to Step 5 output for Indian-registered companies (M13)
+- **Structured competitor data** per entry added to Step 17: founded year, headcount, LinkedIn followers, funding stage (M11)
+- **Past/ceased directors** collection with cessation dates and BD signal for recent (≤2 year) departures (M5)
+- **Historical job role search** when no active postings found — archived listings from last 12–24 months (M4)
+- **WhatsApp Business** detection added to Steps 11 and 12 (M16)
+- **Per-step confidence table** rendered in DATA QUALITY footer (L3)
+- **Website URL and Prepared-for line** added to report header (L2)
+- **Client-count vs review-count discrepancy** Notable signal (H4)
+
+### Fixed — Critical Bugs
+- **C1** — Collection exclusion rule added for financial product facilitators that don't hold a loan book
+- **C2** — Lead Generation removed from KServe services table (KServe does not offer this)
+- **C3** — ICP Review quality score capped at 4 pts when Step 9 confidence is LOW (≤5 reviews)
+- **C4** — Verbatim extraction rule for numerical claims; financial intermediary revenue vs volume distinction
+- **H3** — MCA filing date field corrected: always report MGT-7 annual return date only
+- **M2** — Sulekha added to Step 8B service review platform list
+- **M3** — Employee review Dislikes/Cons field always read verbatim
+- **M9** — GeM check made mandatory for all company types (never "Not checked")
+
+### Changed — Enhancements
+- **Step 6B** — Full OSINT dossier rewrite: LinkedIn URL, post themes, personal interests, communication style classification (5 types), recent activity hooks, other platform OSINT, silent partner detection (O1-O6, M8)
+- **Step 11** — Output now renders all channels: phone(s), email, WhatsApp Business, contact form URL, support hours (M6)
+- **Step 7C** — HTML source inspection added as primary source (gtag.js, GTM, Meta Pixel, Clarity, Hotjar) — step 2 in sequence (M1)
+- **Step 2** — Target client size field added; BD framing sentence requirement added (M15)
+- **Step 12** — YouTube check is now mandatory (was "if applicable"); WhatsApp Business presence noted (M7, M16)
+- **Step 14** — Client logos vs. strategic partners distinction added to Key Partnerships (M10)
+- **Step 3** — Financial intermediary BD framing: aggregate transaction volume ≠ company revenue (M12)
+- **Step 10B** — Decision-maker access definition clarified (profile loads + MCA match); social presence fallback (≥1,000 B2B followers when gated = 3 pts); per-dimension reasoning enforced by Checker (H1, H2, M14)
+- **Step 9** — Provisional qualifier appended when ≤5 total reviews (L1)
+- **Confidence tags** standardized to HIGH/MED/LOW (all caps) across all files; Checker rule added to reject non-standard values (L4)
+- **Output template** — per-step confidence table restored in DATA QUALITY footer (L3)
+
+---
 
 ### Fixed — Skill Standards & Quality (Phase 7 audit)
 

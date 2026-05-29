@@ -48,7 +48,7 @@ Every Worker returns this exact envelope. Wave coordinator parses and threads do
   "status": "APPROVED" | "RETRY_EXHAUSTED",
   "data": { /* step-specific payload — shape defined in output-schemas.json */ },
   "sources": [ { "url": "...", "title": "...", "tier": 1|2|3, "accessed": "ISO-date" } ],
-  "confidence": "high" | "medium" | "low",
+  "confidence": "HIGH" | "MED" | "LOW",
   "notes": "<optional — gaps, caveats>"
 }
 ```

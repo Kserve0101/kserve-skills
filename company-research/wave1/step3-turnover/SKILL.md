@@ -34,6 +34,8 @@ If the latest year is unavailable: write "Private company — turnover not publi
 - Declining trend → cost pressure is real; lead with cost-per-transaction vs. in-house
 - Mixed trend → probe for context (acquisition year, market disruption); don't lead with growth assumptions
 
+**Financial intermediary distinction:** For consultancies, brokers, agents, and introducers: aggregate transaction volume facilitated (total loan value, total premium processed) is NOT the company's revenue. The company's revenue is its commissions, fees, and service charges earned on those transactions. If the source reports transaction volume rather than revenue, label it clearly: `Note: This is aggregate transaction volume facilitated, not company revenue. Company revenue is a fraction of this figure (commissions/fees earned).`
+
 ## Output schema
 
 See `schemas.step-3` in `company-research/output-schemas.json`. Fields summarized:

@@ -10,7 +10,9 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏢 KSERVE BD RESEARCH REPORT
 Company: {{company}}
+Website: {{company_website}}
 Research Date: {{research_date}}
+Prepared for: KServe BPO BD Team
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ✅ VERIFICATION
