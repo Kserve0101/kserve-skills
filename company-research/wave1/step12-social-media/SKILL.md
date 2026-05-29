@@ -16,7 +16,7 @@ None.
 
 ## Instructions
 
-Pull current follower counts: LinkedIn · Instagram · Facebook · Twitter/X · YouTube (if applicable).
+Pull current follower counts: LinkedIn · Instagram · Facebook · Twitter/X · YouTube. Always check YouTube — do not skip even if the company seems non-media. Check WhatsApp Business presence (note: WhatsApp Business channel detected / Not detected).
 
 Engagement signal (check the main platform — LinkedIn for B2B, Instagram for B2C):
 - Review last 5–10 posts on the primary platform.
@@ -44,6 +44,6 @@ See `schemas.step-12` in `company-research/output-schemas.json`. Fields summariz
 
 ```
 📱 SOCIAL MEDIA FOLLOWERS
-LinkedIn: X | Instagram: X | Facebook: X | Twitter/X: X | YouTube: X
+LinkedIn: X | Instagram: X | Facebook: X | Twitter/X: X | YouTube: X | WhatsApp Business: [Detected / Not detected]
 Source(s): [URLs] | Confidence: HIGH/MED/LOW | Checked: YYYY-MM-DD
 ```

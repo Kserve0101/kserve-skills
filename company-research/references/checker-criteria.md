@@ -6,11 +6,13 @@
 |---|---|
 | Data content | At least one data finding is present (not blank, not "TBD") |
 | Source citation | At least one URL or document reference is present |
-| Confidence label | A `high / medium / low` label is present with a source justification |
+| Confidence label | A `HIGH / MED / LOW` label is present with a source justification |
 | Step identifier | Output is clearly attributed to a specific step number |
 
 If any required field is absent: return immediately to Worker with:
 `Schema invalid — missing: [field name(s)]. Resubmit with all required fields present.`
+
+**Confidence label standardization:** Accept only `HIGH`, `MED`, or `LOW` (all caps, exact spelling). Reject any non-standard value (`MEDIUM`, `medium`, `high`, `low`, `Medium`, `High`, etc.) with: `Confidence label invalid — must be HIGH, MED, or LOW (all caps). Received: "[value]".`
 
 Schema rejections do **not** count against the 2-retry budget. The retry budget applies only after schema passes.
 
@@ -26,6 +28,7 @@ When validating any Worker output, apply all eight criteria:
 
 6. **Source diversity?** For high-stakes fields (Turnover, Directors, Head Office, Years in Existence), are there at least 2 *independent* sources? Two aggregators that both pull from MCA (e.g., Tofler + Zauba Corp) do not count as independent — MCA is the single source. If only one source exists, the field must be marked `Confidence: medium` or `low`, not `high`. This isn't a blocker — it's a signal for the output.
 7. **BD relevance?** Does this output answer *"why should KServe reach out to this company now?"* — not just what is factually true, but what is strategically actionable. A section that lists accurate data with no BD framing should be sent back: *"Add a BD insight — what does this data signal for KServe's outreach opportunity?"* This criterion applies most strictly to Steps 8, 10, 12, 14, 15, 16, and 17.
+8. **Step 17 competitor limit:** Competitors array must not exceed 3 entries. Reject with: `Competitors array exceeded maximum (received N, max 3). Resubmit with exactly 3.`
 
    *For Step 8E specifically:* The BD signal field must be an implication, not a description. "They respond to reviews" is not BD insight. Acceptable example: "Review responses are boilerplate and slow (>7 days) — signals understaffed or unstructured CS; KServe's Customer Service offering directly addresses this." If the BD signal reads as description only → send back. Response rate estimates must always reference a sample count (e.g., "based on 12 reviews examined") — not conditional on volume. "None detected" is always valid if platforms were checked. Section 8E defaults to Confidence: medium (methodology is inferred, not stated) unless a job posting or news article explicitly names a tool or process.
 

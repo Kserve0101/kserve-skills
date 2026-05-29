@@ -20,7 +20,6 @@ KServe is an AI-powered Business Process Outsourcing (BPO) company headquartered
 
 | Service | What KServe does |
 |---|---|
-| **Lead Generation** | Identifies and sources potential customers for the client's sales pipeline |
 | **Lead Qualification** | Evaluates leads to determine fit, intent, and readiness to buy — so the client's sales team focuses only on high-value prospects |
 | **Customer Onboarding** | Manages the end-to-end process of welcoming and activating new customers on behalf of the client |
 | **Staff Augmentation** | Provides trained, dedicated staff who work as an extension of the client's own team — without the overhead of in-house hiring |
@@ -28,6 +27,19 @@ KServe is an AI-powered Business Process Outsourcing (BPO) company headquartered
 | **Back-Office Operations** | Takes over internal processing tasks — data entry, documentation, verification, and admin workflows |
 | **Collection** | Manages payment follow-ups, outstanding dues, and recovery processes on behalf of the client |
 | **Market Research** | Gathers competitive intelligence, customer insights, and market data to support the client's business decisions |
+
+### AI Services
+
+All AI services can be purchased standalone, bundled, or integrated with existing BPO services.
+
+| Service | What KServe does |
+|---|---|
+| **Low Code AI Integrated CRM** | Deploys a lightweight, AI-integrated CRM tailored to the client's workflow — no heavy migration, no licensing overhead |
+| **Predictive Lead Scoring** | Scores inbound leads by conversion probability using ML models — so the client's team prioritises high-intent prospects |
+| **Conversation VoiceAI Bot** | Handles inbound and outbound voice conversations in multiple languages — reduces call-centre headcount while maintaining quality |
+| **Sales Enhancer / CX Enhancer** | AI-assisted sales workflows (Sales Enhancer) or customer experience workflows (CX Enhancer) — label based on whether the pain is sales-driven or support-driven |
+| **WhatsApp Chatbot** | Automates enquiries, order tracking, and support via WhatsApp Business API — reaches customers on their preferred channel |
+| **Custom Build** | Bespoke AI tooling for niche industries or fragmented legacy stacks — built to integrate with the client's existing systems |
 
 > All services can be augmented with KServe's AI technology — enabling automation, smarter routing, predictive insights, and higher throughput at lower cost.
 
@@ -117,7 +129,7 @@ Render the final report:
 > Read `company-research/references/orchestrator.md` now.
 > Read `company-research/output/template.md` now.
 
-Invoke `bun run company-research/scripts/format-report.ts <company> <envelopes.json> company-research/output/template.md`.
+Invoke `bun run company-research/scripts/format-report.ts <company> <envelopes.json> company-research/output/template.md [website] [research-date] [verification.json]` — the last 3 args are optional and resolve `{{company_website}}`, `{{research_date}}`, and `{{verification.*}}` placeholders.
 
 # §6 SEQUENTIAL MODE
 

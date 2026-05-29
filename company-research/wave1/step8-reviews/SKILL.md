@@ -58,6 +58,8 @@ Include in output: `Trend: [Improving / Worsening / Stable / Insufficient data] 
 
 BD framing: what does product/app quality feedback signal about operational gaps KServe can address?
 
+**Client-count vs. review-count discrepancy flag:** After gathering all review data, cross-reference with any client/customer count claimed in Step 2 or the company website. If the company claims 1,000+ clients but fewer than 10 total public reviews were found across ALL platforms checked (sections A-D), add a Notable signal: `⚠️ Discrepancy: [N]+ clients claimed but only [M] total public reviews found — review volume is unusually low for the stated client base.`
+
 ---
 
 **B — Service Review**
@@ -65,7 +67,7 @@ BD framing: what does product/app quality feedback signal about operational gaps
 Search for customer sentiment about how the company serves its customers — support quality, delivery, responsiveness, experience.
 
 Sources:
-- Google Business Profile, Trustpilot, Justdial (all company types)
+- Google Business Profile, Trustpilot, Justdial, Sulekha (all company types)
 - Finance / Insurance: banking ombudsman forums, consumer court portals, RBI complaint trackers
 - B2B: IndiaMart seller ratings, LinkedIn client testimonials, absence of case studies as a signal
 
@@ -91,7 +93,7 @@ Sources:
 Find:
 - Overall rating on each platform, review volume
 - Top 3 positives (recurring themes)
-- Top 3 negatives (recurring themes)
+- Top 3 negatives (recurring themes) — **always read the Dislikes/Cons field verbatim.** Do not write "nothing" without checking the actual field content. If the Cons/Dislikes field exists but is empty, note "Cons field present but blank" rather than omitting.
 - Any mentions of process quality, training programs, tech stack, attrition rate, management style
 
 BD framing: high attrition or poor internal process = outsourcing appetite; strong culture = partnership-friendly decision-maker.

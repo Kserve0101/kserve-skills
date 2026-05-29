@@ -36,7 +36,7 @@ Format: `[Role title] — [KServe service match] — [approximate count or "mult
 Then: 1-sentence BD signal — what does this hiring pattern imply about the company's current resourcing pressure?
 - High attrition in a KServe-relevant function (flagged by replacement / immediate-joiner language) → strongest outsourcing trigger: the company is losing productivity every hiring cycle; outsourcing removes the attrition cost entirely. Lead with: "We've helped companies in [industry] eliminate recurring backfill cost in [function] by transitioning to a managed-ops model."
 
-**If no public job postings found:** Write `No active job postings found on Naukri, LinkedIn Jobs, or Indeed India as of [date]. Company may not be publicly recruiting, or postings may be behind a login wall.`
+**If no public job postings found:** Search archived listings on LinkedIn, Naukri, and Indeed for the last 12–24 months. Report the most recent role types per function area as in-house function signals (e.g., "Last known hiring: Customer Support roles posted on Naukri in Q3 2025; Back-Office roles on LinkedIn in Q2 2025"). If no archived listings found either: Write `No active or archived job postings found on Naukri, LinkedIn Jobs, or Indeed India as of [date]. Company may not be publicly recruiting, or postings may be behind a login wall.`
 
 **Employee Headcount & Growth Trend:**
 Search LinkedIn company page for current employee count and any displayed growth percentage. Cross-reference with Crunchbase employee range.
