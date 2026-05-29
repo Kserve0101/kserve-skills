@@ -132,4 +132,9 @@ describe("validateEnvelope", () => {
     const env = { step: "step-17", status: "APPROVED", data: { competitors: [{ name: "Competitor Inc", rationale: "Direct competitor" }] }, sources: [{ url: "https://example.com", title: "Crunchbase", tier: 1, accessed: "2026-05-22" }], confidence: "HIGH" };
     expect(validateEnvelope(env).ok).toBe(true);
   });
+
+  test("accepts step-6b envelope without optional OSINT fields", () => {
+    const env = { step: "step-6b", status: "APPROVED", data: { dossiers: [{ name: "A Sharma", role: "MD", background: "Former CFO at HDFC." }] }, sources: [{ url: "https://example.com", title: "MCA", tier: 1, accessed: "2026-05-29" }], confidence: "HIGH" };
+    expect(validateEnvelope(env).ok).toBe(true);
+  });
 });

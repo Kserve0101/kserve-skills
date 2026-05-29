@@ -41,7 +41,7 @@ Compute a scored Ideal Customer Profile rating (0–100) for this company as a K
 
 **Review quality cap:** When fewer than 6 total reviews were found across all platforms in Step 8, cap the Review quality score at 4 pts regardless of numerical rating. This prevents 1–2 reviews from producing a misleadingly high pain signal.
 
-**Decision-maker access definition:** "Accessible" means: (a) the LinkedIn profile loads without a login prompt or paywall, AND (b) the name on the profile matches the MCA director record. If either condition fails, score as "None accessible."
+**Decision-maker access definition:** "Accessible" means: (a) the LinkedIn profile loads without a login prompt or paywall, AND (b) the name on the profile matches the MCA director record. If either condition fails, score as "None accessible." For non-Indian companies or companies not found on MCA, condition (b) is waived — score as "Accessible" if condition (a) alone is met.
 
 **Social presence fallback:** If posting frequency cannot be determined because the platform login-gates historical posts, use LinkedIn follower count as a proxy: >1,000 LinkedIn followers = 3 pts (not 0). For Instagram or Facebook consumer accounts: do not apply this fallback — use 0 pts when posting frequency is gated. Below 1,000 LinkedIn followers = 0 pts.
 
