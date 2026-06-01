@@ -98,7 +98,12 @@ jobs:
         if: github.event_name == 'issues' || github.event_name == 'pull_request'
         run: |
           PATCHED=$(mktemp)
-          jq '.sender.login = "uti-kserve[bot]" | .sender.type = "Bot"' "$GITHUB_EVENT_PATH" > "$PATCHED"
+          jq '
+            .sender.login = "uti-kserve[bot]" |
+            .sender.type = "Bot" |
+            if .issue then .issue.user.login = "uti-kserve[bot]" | .issue.user.type = "Bot" else . end |
+            if .pull_request then .pull_request.user.login = "uti-kserve[bot]" | .pull_request.user.type = "Bot" else . end
+          ' "$GITHUB_EVENT_PATH" > "$PATCHED"
           echo "GITHUB_EVENT_PATH=$PATCHED" >> $GITHUB_ENV
           echo "GITHUB_ACTOR=uti-kserve[bot]" >> $GITHUB_ENV
 
