@@ -24,7 +24,8 @@ jobs:
         contains(github.event.comment.body, '/opencode') ||
         contains(github.event.comment.body, '/uti') ||
         contains(github.event.comment.body, '/UTI') ||
-        contains(github.event.comment.body, '/Uti')
+        contains(github.event.comment.body, '/Uti') ||
+        contains(github.event.comment.body, '@uti-kserve')
       )
     runs-on: ubuntu-latest
     permissions:
@@ -218,5 +219,5 @@ jobs:
           model: ${{ steps.parse.outputs.model }}
           variant: high
           use_github_token: "true"
-          mentions: "/oc,/opencode,/uti"
+          mentions: "/oc,/opencode,/uti,@uti-kserve"
           prompt: ${{ steps.prompt.outputs.prompt }}
