@@ -7,7 +7,7 @@
 
 ## Goal
 
-Extend the existing opencode GitHub Actions workflow to handle three distinct task types (`review`, `triage`, `fix`), enforce collaborator-only access, support model overrides, and queue concurrent runs — while keeping all production changes human-gated via draft PRs.
+Extend the existing opencode GitHub Actions workflow to handle five distinct flows: manual slash commands (`review`, `triage`, `fix`, `general`), auto-triage on new issues, and auto-review on new PRs. Enforce collaborator-only access for slash commands, support model overrides, and queue concurrent runs — while keeping all code changes human-gated via draft PRs.
 
 ---
 
@@ -27,25 +27,30 @@ No separate jobs per command — routing handled via parsed env vars passed to t
 
 ## Triggers
 
-Unchanged from current:
+Three trigger types — two automatic, one slash-command:
 
 ```yaml
 on:
+  issues:
+    types: [opened]                        # auto-triage new issues
+  pull_request:
+    types: [opened]                        # auto-review new PRs
   issue_comment:
-    types: [created]
+    types: [created]                       # slash commands on issues
   pull_request_review_comment:
-    types: [created]
+    types: [created]                       # slash commands on PR comments
 ```
 
-Activation condition (unchanged):
+### Trigger → Flow mapping
 
-```yaml
-if: |
-  contains(github.event.comment.body, ' /oc') ||
-  startsWith(github.event.comment.body, '/oc') ||
-  contains(github.event.comment.body, ' /opencode') ||
-  startsWith(github.event.comment.body, '/opencode')
-```
+| Event | Condition | Flow |
+|---|---|---|
+| `issues: opened` | Always | Auto-triage |
+| `pull_request: opened` | Always | Auto-review |
+| `issue_comment: created` | Comment contains `/oc` or `/opencode` | Slash command |
+| `pull_request_review_comment: created` | Comment contains `/oc` or `/opencode` | Slash command |
+
+Auto-triggers (issue/PR opened) run unconditionally — no slash command needed. Slash command triggers require `/oc` or `/opencode` prefix (existing behavior).
 
 ---
 
@@ -77,11 +82,14 @@ Scoped per repo. Multiple triggers queue — they do not cancel each other.
 
 ## Security: Collaborator Check
 
-Only repo collaborators (write access) can trigger opencode. Check via `author_association`:
+Auto-triggers (`issues: opened`, `pull_request: opened`) run for **all users** — anyone can open an issue or PR and get a triage/review response.
+
+Slash commands (`/oc`, `/opencode`) restricted to collaborators only. Check via `author_association` — only runs for `issue_comment` and `pull_request_review_comment` events:
 
 ```yaml
 - name: Check collaborator permission
   id: auth
+  if: github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment'
   run: |
     ASSOCIATION="${{ github.event.comment.author_association }}"
     if [[ "$ASSOCIATION" == "OWNER" || "$ASSOCIATION" == "MEMBER" || "$ASSOCIATION" == "COLLABORATOR" ]]; then
@@ -91,11 +99,13 @@ Only repo collaborators (write access) can trigger opencode. Check via `author_a
     fi
 
 - name: Exit if unauthorized
-  if: steps.auth.outputs.authorized != 'true'
+  if: |
+    (github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') &&
+    steps.auth.outputs.authorized != 'true'
   run: exit 0
 ```
 
-Silently exits (no error, no comment) for unauthorized users.
+Silently exits (no error, no comment) for unauthorized slash command users.
 
 ---
 
@@ -129,12 +139,29 @@ Default model: `opencode-go/deepseek-v4-flash`. Override via `--model <model-id>
 
 ## Command Routing
 
-| Command | Trigger example | What opencode does | Output |
+| Command | Triggered by | What opencode does | Output |
 |---|---|---|---|
-| `review` | `/oc review` | Analyze PR diff — code quality, security, logic | Comment on PR |
-| `triage` | `/oc triage` | Analyze issue, suggest labels, ask clarifying Qs | Comment on issue |
-| `fix` | `/oc fix` | Fix typos/formatting/docs only (no logic changes) | Draft PR from `opencode/fix-*` branch |
-| `general` | `/oc` | Current behavior, no constraint | Comment |
+| `auto-triage` | Issue opened | Assess complexity, label, ask clarifying Qs. If simple → posts plan + awaits `/oc continue` | Comment on issue |
+| `auto-review` | PR opened | Full PR diff review — quality, security, logic | Comment on PR |
+| `review` | `/oc review` | Same as auto-review, manually triggered | Comment on PR |
+| `triage` | `/oc triage` | Manually trigger triage on existing issue | Comment on issue |
+| `fix` | `/oc fix` or `/oc continue` | Implement fix for simple issue (no logic changes) or typo/doc fix | Draft PR from `opencode/fix-*` branch |
+| `general` | `/oc` | No constraint — current behavior | Comment |
+
+### Auto-triage flow (issues: opened)
+
+1. opencode reads issue title + body
+2. Labels issue (bug / enhancement / question / etc.)
+3. Assesses complexity: **simple** (typo, doc, small config) vs **complex** (logic, architecture)
+4. If **complex**: posts clarifying questions, stops. User answers in comments, then triggers `/oc fix` or `/oc continue` to proceed.
+5. If **simple**: posts proposed approach as comment, asks user to reply `/oc continue` to proceed or `/oc fix` to implement directly.
+6. `/oc continue` or `/oc fix` on issue → opencode implements + opens draft PR.
+
+### Auto-review flow (pull_request: opened)
+
+1. opencode reads PR diff
+2. Posts structured review comment: summary, findings (severity-tagged), suggestions
+3. No code changes — comment only
 
 `OPENCODE_COMMAND` env var passed to opencode action signals which mode to operate in.
 
@@ -160,8 +187,10 @@ Default model: `opencode-go/deepseek-v4-flash`. Override via `--model <model-id>
 
 ## Human-in-the-Loop Contract
 
-- `review` / `triage` / `general`: read + comment only. No code changes.
-- `fix`: opencode pushes to a new branch (`opencode/fix-*`), opens a **draft PR**. Human reviews diff and merges manually.
+- `auto-review` / `review` / `triage` / `general`: read + comment only. No code changes.
+- `auto-triage` (complex issue): asks clarifying Qs, waits. Human must explicitly trigger `/oc fix` or `/oc continue`.
+- `auto-triage` (simple issue): posts proposed plan, waits. Human must confirm with `/oc continue` or `/oc fix`.
+- `fix` / `continue`: opencode pushes to `opencode/fix-*` branch, opens **draft PR**. Human reviews diff and merges manually.
 - opencode **cannot** merge PRs, push to `main`, or modify branch protection rules.
 
 ---
