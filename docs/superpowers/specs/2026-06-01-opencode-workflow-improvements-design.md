@@ -337,26 +337,42 @@ Uti's persona is injected via `OPENCODE_INSTRUCTIONS` (or equivalent prompt para
 
 ### Integration with opencode action
 
-**Primary path (C):** Check if `anomalyco/opencode` accepts a `github-token` input. If yes:
+**Confirmed approach (verified via `anomalyco/opencode` action.yml):**
+
+The action supports `use_github_token: true` — skips opencode's OIDC exchange, uses `GITHUB_TOKEN` env var directly. Passing `kserve-mdo-agent` installation token as `GITHUB_TOKEN` causes opencode to post all comments as `kserve-mdo-agent[bot]`.
+
+The action also supports:
+- `mentions` input — add `/uti` natively (no custom regex needed in workflow)
+- `prompt` input — inject Uti persona instructions directly
+
 ```yaml
+- name: Generate kserve-mdo-agent token
+  id: app-token
+  uses: actions/create-github-app-token@v1
+  with:
+    app-id: ${{ secrets.UTI_APP_ID }}
+    private-key: ${{ secrets.UTI_PRIVATE_KEY }}
+
 - name: Run opencode as Uti
   uses: anomalyco/opencode/github@latest
+  env:
+    GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
   with:
     model: ${{ steps.parse.outputs.model }}
     variant: high
-    github-token: ${{ steps.uti-token.outputs.token }}   # Uti posts as uti-kserve[bot]
+    use_github_token: "true"
+    mentions: "/oc,/opencode,/uti"
+    prompt: |
+      You are Uti (Understand, Think, Implement) — KServe's codebase guardian.
+      [full persona instructions injected here — see Uti Persona section]
 ```
 
-**Fallback path (A):** If opencode doesn't support custom token — opencode runs silently (no comments), a separate step uses Uti's token to post the response:
-```yaml
-- name: Post Uti response
-  env:
-    GH_TOKEN: ${{ steps.uti-token.outputs.token }}
-  run: |
-    gh issue comment ${{ github.event.issue.number }} --body "$OPENCODE_OUTPUT"
-```
+### Secrets Required
 
-> **Implementation gate:** Verify `anomalyco/opencode` action inputs before choosing path. Check `action.yml` in the action repo for `github-token` or `token` input support.
+| Secret | Value |
+|---|---|
+| `UTI_APP_ID` | `3849769` |
+| `UTI_PRIVATE_KEY` | `.pem` contents from kserve-mdo-agent app settings — **added** ✅ |
 
 ---
 
