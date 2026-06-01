@@ -17,13 +17,15 @@ concurrency:
 jobs:
   uti:
     if: |
-      github.event_name == 'issues' ||
-      github.event_name == 'pull_request' ||
-      contains(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, '/opencode') ||
-      contains(github.event.comment.body, '/uti') ||
-      contains(github.event.comment.body, '/UTI') ||
-      contains(github.event.comment.body, '/Uti')
+      github.actor != 'kserve-mdo-agent[bot]' && (
+        github.event_name == 'issues' ||
+        github.event_name == 'pull_request' ||
+        contains(github.event.comment.body, '/oc') ||
+        contains(github.event.comment.body, '/opencode') ||
+        contains(github.event.comment.body, '/uti') ||
+        contains(github.event.comment.body, '/UTI') ||
+        contains(github.event.comment.body, '/Uti')
+      )
     runs-on: ubuntu-latest
     permissions:
       id-token: write
