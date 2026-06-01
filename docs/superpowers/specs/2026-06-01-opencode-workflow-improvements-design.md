@@ -47,10 +47,10 @@ on:
 |---|---|---|
 | `issues: opened` | Always | Auto-triage |
 | `pull_request: opened` | Always | Auto-review |
-| `issue_comment: created` | Comment contains `/oc` or `/opencode` | Slash command |
-| `pull_request_review_comment: created` | Comment contains `/oc` or `/opencode` | Slash command |
+| `issue_comment: created` | Comment contains `/oc`, `/opencode`, or `/uti` (any case) | Slash command |
+| `pull_request_review_comment: created` | Comment contains `/oc`, `/opencode`, or `/uti` (any case) | Slash command |
 
-Auto-triggers (issue/PR opened) run unconditionally — no slash command needed. Slash command triggers require `/oc` or `/opencode` prefix (existing behavior).
+Auto-triggers (issue/PR opened) run unconditionally — no slash command needed. Slash command triggers require `/oc`, `/opencode`, or `/uti` prefix. `/uti` is case-insensitive (`/uti`, `/UTI`, `/Uti` all valid).
 
 ---
 
@@ -94,9 +94,9 @@ All other slash commands restricted to collaborators only. Check via `author_ass
   if: github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment'
   run: |
     ASSOCIATION="${{ github.event.comment.author_association }}"
-    # /oc answer is open to all users — skip auth check for it
+    # /oc answer (and /uti answer) is open to all users — skip auth check for it
     BODY="${{ github.event.comment.body }}"
-    if echo "$BODY" | grep -qE '(/oc|/opencode) answer'; then
+    if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) answer'; then
       echo "authorized=true" >> $GITHUB_OUTPUT
     elif [[ "$ASSOCIATION" == "OWNER" || "$ASSOCIATION" == "MEMBER" || "$ASSOCIATION" == "COLLABORATOR" ]]; then
       echo "authorized=true" >> $GITHUB_OUTPUT
@@ -125,11 +125,14 @@ Extracts command type and optional `--model` flag:
   run: |
     BODY="${{ github.event.comment.body }}"
 
-    if echo "$BODY" | grep -qE '(/oc|/opencode) review'; then
+    # -i flag = case-insensitive; covers /uti /UTI /Uti
+    if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) review'; then
       echo "command=review" >> $GITHUB_OUTPUT
-    elif echo "$BODY" | grep -qE '(/oc|/opencode) triage'; then
+    elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) triage'; then
       echo "command=triage" >> $GITHUB_OUTPUT
-    elif echo "$BODY" | grep -qE '(/oc|/opencode) fix'; then
+    elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) answer'; then
+      echo "command=answer" >> $GITHUB_OUTPUT
+    elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) (fix|continue)'; then
       echo "command=fix" >> $GITHUB_OUTPUT
     else
       echo "command=general" >> $GITHUB_OUTPUT
@@ -149,11 +152,11 @@ Default model: `opencode-go/deepseek-v4-flash`. Override via `--model <model-id>
 |---|---|---|---|
 | `auto-triage` | Issue opened | Assess complexity, label, ask clarifying Qs. If simple → posts plan + awaits `/oc continue` | Comment on issue |
 | `auto-review` | PR opened | Full PR diff review — quality, security, logic | Comment on PR |
-| `review` | `/oc review` | Same as auto-review, manually triggered | Comment on PR |
-| `triage` | `/oc triage` | Manually trigger triage on existing issue | Comment on issue |
-| `answer` | `/oc answer <text>` | Submit answers to opencode's clarifying questions (open to all users) | opencode processes answers, updates understanding |
-| `fix` | `/oc fix` or `/oc continue` | Implement fix for simple issue (no logic changes) or typo/doc fix | Draft PR from `opencode/fix-*` branch |
-| `general` | `/oc` | No constraint — current behavior | Comment |
+| `review` | `/oc review` · `/uti review` | Same as auto-review, manually triggered | Comment on PR |
+| `triage` | `/oc triage` · `/uti triage` | Manually trigger triage on existing issue | Comment on issue |
+| `answer` | `/oc answer` · `/uti answer` · `/UTI answer` | Submit answers to clarifying questions (**open to all users**) | opencode processes answers, updates understanding |
+| `fix` | `/oc fix` · `/uti fix` · `/oc continue` · `/uti continue` | Implement fix for simple issue or typo/doc fix | Draft PR from `opencode/fix-*` branch |
+| `general` | `/oc` · `/uti` · `/opencode` | No constraint — current behavior | Comment |
 
 ### Auto-triage flow (issues: opened)
 
