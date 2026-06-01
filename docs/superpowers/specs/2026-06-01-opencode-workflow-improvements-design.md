@@ -308,6 +308,58 @@ Uti's persona is injected via `OPENCODE_INSTRUCTIONS` (or equivalent prompt para
 
 ---
 
+## Uti GitHub App Identity
+
+**Display name:** Uti @ KServe
+**GitHub username:** `uti-kserve` (appears as `uti-kserve[bot]` on all comments)
+
+### Setup
+
+1. Create GitHub App "Uti @ KServe" at `github.com/organizations/KServe-FMS/settings/apps/new`
+   - Slug: `uti-kserve`
+   - Description: "Understand, Think, Implement — KServe's codebase guardian"
+   - Permissions: Issues (read/write), Pull requests (read/write), Contents (read/write)
+   - Events: Issue comment, Pull request, Issues
+2. Generate private key from App settings
+3. Install app on `KServe-FMS/skills` repo
+4. Store secrets in repo: `UTI_APP_ID`, `UTI_PRIVATE_KEY`
+
+### Token Generation in Workflow
+
+```yaml
+- name: Generate Uti app token
+  id: uti-token
+  uses: actions/create-github-app-token@v1
+  with:
+    app-id: ${{ secrets.UTI_APP_ID }}
+    private-key: ${{ secrets.UTI_PRIVATE_KEY }}
+```
+
+### Integration with opencode action
+
+**Primary path (C):** Check if `anomalyco/opencode` accepts a `github-token` input. If yes:
+```yaml
+- name: Run opencode as Uti
+  uses: anomalyco/opencode/github@latest
+  with:
+    model: ${{ steps.parse.outputs.model }}
+    variant: high
+    github-token: ${{ steps.uti-token.outputs.token }}   # Uti posts as uti-kserve[bot]
+```
+
+**Fallback path (A):** If opencode doesn't support custom token — opencode runs silently (no comments), a separate step uses Uti's token to post the response:
+```yaml
+- name: Post Uti response
+  env:
+    GH_TOKEN: ${{ steps.uti-token.outputs.token }}
+  run: |
+    gh issue comment ${{ github.event.issue.number }} --body "$OPENCODE_OUTPUT"
+```
+
+> **Implementation gate:** Verify `anomalyco/opencode` action inputs before choosing path. Check `action.yml` in the action repo for `github-token` or `token` input support.
+
+---
+
 ## Out of Scope
 
 - Auto-approval flows
