@@ -153,9 +153,9 @@ Default model: `opencode-go/deepseek-v4-flash`. Override via `--model <model-id>
 1. opencode reads issue title + body
 2. Labels issue (bug / enhancement / question / etc.)
 3. Assesses complexity: **simple** (typo, doc, small config) vs **complex** (logic, architecture)
-4. If **complex**: posts clarifying questions, stops. User answers in comments, then triggers `/oc fix` or `/oc continue` to proceed.
-5. If **simple**: posts proposed approach as comment, asks user to reply `/oc continue` to proceed or `/oc fix` to implement directly.
-6. `/oc continue` or `/oc fix` on issue → opencode implements + opens draft PR.
+4. If **complex**: posts clarifying questions, stops. Issue opener answers in plain comments (no slash command needed). A **collaborator** then triggers `/oc fix` or `/oc continue` to proceed.
+5. If **simple**: posts proposed approach as comment. A **collaborator** replies `/oc continue` to confirm or `/oc fix` to implement directly.
+6. `/oc continue` or `/oc fix` (collaborator only) → opencode implements + opens draft PR.
 
 ### Auto-review flow (pull_request: opened)
 
