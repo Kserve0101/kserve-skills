@@ -17,7 +17,7 @@ concurrency:
 jobs:
   uti:
     if: |
-      github.actor != 'kserve-mdo-agent[bot]' && (
+      github.event.sender.type != 'Bot' && (
         github.event_name == 'issues' ||
         github.event_name == 'pull_request' ||
         contains(github.event.comment.body, '/oc') ||
