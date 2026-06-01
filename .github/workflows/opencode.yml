@@ -100,6 +100,7 @@ jobs:
           PATCHED=$(mktemp)
           jq '.sender.login = "uti-kserve[bot]" | .sender.type = "Bot"' "$GITHUB_EVENT_PATH" > "$PATCHED"
           echo "GITHUB_EVENT_PATH=$PATCHED" >> $GITHUB_ENV
+          echo "GITHUB_ACTOR=uti-kserve[bot]" >> $GITHUB_ENV
 
       - name: Build Uti prompt
         id: prompt
