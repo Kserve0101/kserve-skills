@@ -84,7 +84,9 @@ Scoped per repo. Multiple triggers queue — they do not cancel each other.
 
 Auto-triggers (`issues: opened`, `pull_request: opened`) run for **all users** — anyone can open an issue or PR and get a triage/review response.
 
-Slash commands (`/oc`, `/opencode`) restricted to collaborators only. Check via `author_association` — only runs for `issue_comment` and `pull_request_review_comment` events:
+`/oc answer` open to **all users** — anyone (including non-collaborators) can reply with answers to opencode's clarifying questions.
+
+All other slash commands restricted to collaborators only. Check via `author_association` — only runs for `issue_comment` and `pull_request_review_comment` events:
 
 ```yaml
 - name: Check collaborator permission
@@ -92,7 +94,11 @@ Slash commands (`/oc`, `/opencode`) restricted to collaborators only. Check via 
   if: github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment'
   run: |
     ASSOCIATION="${{ github.event.comment.author_association }}"
-    if [[ "$ASSOCIATION" == "OWNER" || "$ASSOCIATION" == "MEMBER" || "$ASSOCIATION" == "COLLABORATOR" ]]; then
+    # /oc answer is open to all users — skip auth check for it
+    BODY="${{ github.event.comment.body }}"
+    if echo "$BODY" | grep -qE '(/oc|/opencode) answer'; then
+      echo "authorized=true" >> $GITHUB_OUTPUT
+    elif [[ "$ASSOCIATION" == "OWNER" || "$ASSOCIATION" == "MEMBER" || "$ASSOCIATION" == "COLLABORATOR" ]]; then
       echo "authorized=true" >> $GITHUB_OUTPUT
     else
       echo "authorized=false" >> $GITHUB_OUTPUT
@@ -105,7 +111,7 @@ Slash commands (`/oc`, `/opencode`) restricted to collaborators only. Check via 
   run: exit 0
 ```
 
-Silently exits (no error, no comment) for unauthorized slash command users.
+Silently exits (no error, no comment) for unauthorized users. `/oc answer` bypasses auth check.
 
 ---
 
@@ -145,6 +151,7 @@ Default model: `opencode-go/deepseek-v4-flash`. Override via `--model <model-id>
 | `auto-review` | PR opened | Full PR diff review — quality, security, logic | Comment on PR |
 | `review` | `/oc review` | Same as auto-review, manually triggered | Comment on PR |
 | `triage` | `/oc triage` | Manually trigger triage on existing issue | Comment on issue |
+| `answer` | `/oc answer <text>` | Submit answers to opencode's clarifying questions (open to all users) | opencode processes answers, updates understanding |
 | `fix` | `/oc fix` or `/oc continue` | Implement fix for simple issue (no logic changes) or typo/doc fix | Draft PR from `opencode/fix-*` branch |
 | `general` | `/oc` | No constraint — current behavior | Comment |
 
@@ -153,8 +160,8 @@ Default model: `opencode-go/deepseek-v4-flash`. Override via `--model <model-id>
 1. opencode reads issue title + body
 2. Labels issue (bug / enhancement / question / etc.)
 3. Assesses complexity: **simple** (typo, doc, small config) vs **complex** (logic, architecture)
-4. If **complex**: posts clarifying questions, stops. Issue opener answers in plain comments (no slash command needed). A **collaborator** then triggers `/oc fix` or `/oc continue` to proceed.
-5. If **simple**: posts proposed approach as comment. A **collaborator** replies `/oc continue` to confirm or `/oc fix` to implement directly.
+4. If **complex**: posts clarifying questions, stops. Anyone (including issue opener) answers using `/oc answer <text>`. opencode processes answers and may ask follow-up Qs. A **collaborator** then triggers `/oc fix` or `/oc continue` to implement.
+5. If **simple**: posts proposed approach as comment. Anyone can use `/oc answer` to add context. A **collaborator** replies `/oc continue` to confirm or `/oc fix` to implement directly.
 6. `/oc continue` or `/oc fix` (collaborator only) → opencode implements + opens draft PR.
 
 ### Auto-review flow (pull_request: opened)
