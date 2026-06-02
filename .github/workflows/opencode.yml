@@ -221,18 +221,42 @@ jobs:
           git config --global user.name "uti-kserve"
           git config --global user.email "uti@kserve"
 
-      - name: Run opencode as Uti
-        uses: anomalyco/opencode/github@latest
+      - name: Install opencode
+        run: npm install -g opencode@latest
+
+      - name: Import previous session
+        id: session
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
+
+          SHARE_ID=$(gh api "repos/${{ github.repository }}/issues/$NUMBER/comments" \
+            --jq '[.[] | select(.user.login == "uti-kserve[bot]") | .body | scan("opncd\\.ai/share/([A-Za-z0-9]+)") | .[0]] | last // empty')
+
+          if [[ -n "$SHARE_ID" ]]; then
+            IMPORT_OUT=$(opencode import "https://opncd.ai/share/$SHARE_ID" 2>&1 || true)
+            SESSION_ID=$(echo "$IMPORT_OUT" | grep -oP 'ses_\S+' || true)
+            echo "id=$SESSION_ID" >> $GITHUB_OUTPUT
+            echo "Resuming session $SESSION_ID (share/$SHARE_ID)"
+          else
+            echo "id=" >> $GITHUB_OUTPUT
+            echo "No previous session — starting fresh"
+          fi
+
+      - name: Run opencode as Uti
+        env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-        with:
-          model: ${{ steps.parse.outputs.model }}
-          variant: high
-          use_github_token: "true"
-          mentions: "/oc,/opencode,/uti"
-          prompt: ${{ steps.prompt.outputs.prompt }}
+          MODEL: ${{ steps.parse.outputs.model }}
+          VARIANT: high
+          USE_GITHUB_TOKEN: "true"
+          MENTIONS: "/oc,/opencode,/uti"
+          PROMPT: ${{ steps.prompt.outputs.prompt }}
+        run: |
+          SESSION_FLAG=""
+          [[ -n "${{ steps.session.outputs.id }}" ]] && SESSION_FLAG="-s ${{ steps.session.outputs.id }}"
+          opencode github run $SESSION_FLAG
 
       - name: Fix share URL in bot comment
         if: always()
