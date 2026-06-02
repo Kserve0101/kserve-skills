@@ -57,8 +57,6 @@ jobs:
         contains(github.event.comment.body, '/oc') ||
         contains(github.event.comment.body, '/opencode') ||
         contains(github.event.comment.body, '/uti') ||
-        contains(github.event.comment.body, '/UTI') ||
-        contains(github.event.comment.body, '/Uti') ||
         contains(github.event.comment.body, '@uti-kserve')
       ) && (
         github.event.sender.type != 'Bot' ||
@@ -249,6 +247,7 @@ jobs:
           FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          TOKEN: ${{ steps.app-token.outputs.token }}
         with:
           model: ${{ steps.parse.outputs.model }}
           variant: high
