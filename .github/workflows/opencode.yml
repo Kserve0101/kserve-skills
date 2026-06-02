@@ -75,6 +75,40 @@ jobs:
           MODEL=$(echo "$BODY" | grep -oP '(?<=--model )\S+' || echo "opencode-go/deepseek-v4-flash")
           echo "model=${MODEL}" >> $GITHUB_OUTPUT
 
+      - name: Fetch conversation context
+        id: conv
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          REPO="${{ github.repository }}"
+          NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
+
+          # Detect PR vs issue
+          IS_PR=false
+          if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
+            IS_PR=true
+          elif gh api "repos/$REPO/issues/$NUMBER" --jq '.pull_request.url // empty' 2>/dev/null | grep -q .; then
+            IS_PR=true
+          fi
+
+          if [[ "$IS_PR" == "true" ]]; then
+            gh api "repos/$REPO/pulls/$NUMBER" --jq \
+              '"=== PR #\(.number): \(.title) ===\nBy: @\(.user.login) | +\(.additions)/-\(.deletions) in \(.changed_files) files\nBase: \(.base.ref) ← \(.head.ref)\n\nDescription:\n\(.body // "(none)")"' \
+              > /tmp/uti_thread.txt
+            printf '\n\n=== DIFF (first 3000 chars) ===\n' >> /tmp/uti_thread.txt
+            gh api "repos/$REPO/pulls/$NUMBER" \
+              --header "Accept: application/vnd.github.diff" 2>/dev/null | head -c 3000 >> /tmp/uti_thread.txt
+          else
+            gh api "repos/$REPO/issues/$NUMBER" --jq \
+              '"=== Issue #\(.number): \(.title) ===\nBy: @\(.user.login)\nLabels: \([.labels[].name] | if length == 0 then ["none"] else . end | join(", "))\n\nBody:\n\(.body // "(none)")"' \
+              > /tmp/uti_thread.txt
+          fi
+
+          printf '\n\n=== COMMENT HISTORY (oldest first) ===\n' >> /tmp/uti_thread.txt
+          gh api "repos/$REPO/issues/$NUMBER/comments" --jq \
+            '.[] | "[\(.created_at | split("T")[0])] @\(.user.login):\n\(.body)\n---"' \
+            >> /tmp/uti_thread.txt
+
       - name: Generate Uti app token
         id: app-token
         uses: actions/create-github-app-token@v1
@@ -89,6 +123,7 @@ jobs:
         id: prompt
         run: |
           COMMAND="${{ steps.parse.outputs.command }}"
+          THREAD=$(cat /tmp/uti_thread.txt)
 
           BASE_PERSONA="You are Uti (Understand, Think, Implement) — KServe's codebase guardian.
           Ancient Sanskrit meaning: help, protection, kindness.
@@ -119,9 +154,14 @@ jobs:
           - /uti fix — collaborators use to trigger implementation
           - /uti continue — collaborators use to confirm and proceed"
 
+          CONTEXT_BLOCK="
+          FULL THREAD (issue/PR body + all prior comments in order — do not re-discover what is already here):
+          $THREAD"
+
           case "$COMMAND" in
             review)
               PROMPT="$BASE_PERSONA
+          $CONTEXT_BLOCK
 
           CURRENT TASK: Manual PR review triggered by a collaborator.
           Read the diff, post structured findings with severity tags, make zero code changes.
@@ -130,6 +170,7 @@ jobs:
               ;;
             triage)
               PROMPT="$BASE_PERSONA
+          $CONTEXT_BLOCK
 
           CURRENT TASK: Manual triage triggered on an existing issue.
           Apply a label, assess complexity, ask clarifying questions if complex, post proposed approach if simple.
@@ -137,10 +178,11 @@ jobs:
               ;;
             answer)
               PROMPT="$BASE_PERSONA
+          $CONTEXT_BLOCK
 
           CURRENT TASK: A user has provided answers to your clarifying questions.
           Steps:
-          1. Read their answers carefully
+          1. Read their answers carefully — the full thread above shows what was already asked and answered
           2. Acknowledge what changed or was clarified — one line maximum
           3. If you have enough context: state your updated approach clearly, then ask a collaborator to trigger /uti continue or /uti fix
           4. If you still need more info: ask one or two focused follow-up questions only
@@ -148,6 +190,7 @@ jobs:
               ;;
             fix)
               PROMPT="$BASE_PERSONA
+          $CONTEXT_BLOCK
 
           CURRENT TASK: Implement the fix.
           HARD CONSTRAINTS:
@@ -161,6 +204,7 @@ jobs:
               ;;
             *)
               PROMPT="$BASE_PERSONA
+          $CONTEXT_BLOCK
 
           CURRENT TASK: General request — no specific constraint.
           Read the comment carefully and respond as Uti — helpful, direct, no fuss.
