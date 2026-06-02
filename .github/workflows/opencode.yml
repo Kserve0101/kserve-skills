@@ -15,8 +15,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Auto-triage/review using GitHub Models API directly.
+  # Bypasses opencode's collaborator permission check entirely.
   auto-trigger:
-    name: Post auto-trigger comment
+    name: Auto triage/review
     if: |
       github.event.sender.type != 'Bot' && (
         github.event_name == 'issues' ||
@@ -26,6 +28,8 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
+      contents: read
+      models: read
     steps:
       - name: Generate Uti app token
         id: app-token
@@ -34,23 +38,105 @@ jobs:
           app-id: ${{ secrets.UTI_APP_ID }}
           private-key: ${{ secrets.UTI_PRIVATE_KEY }}
 
-      - name: Post trigger comment as Uti
+      - name: Fetch issue/PR context
+        id: ctx
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
+          REPO="${{ github.repository }}"
+
           if [[ "${{ github.event_name }}" == "issues" ]]; then
             NUMBER="${{ github.event.issue.number }}"
-            gh issue comment "$NUMBER" --repo "$REPO" --body "/uti auto-triage"
+            AUTHOR="${{ github.event.issue.user.login }}"
+            EVENT_TYPE="issue"
+            gh api "repos/$REPO/issues/$NUMBER" --jq '
+              "Issue #\(.number): \(.title)\n\nBody:\n\(.body // "(no body)")\n\nOpened by: @\(.user.login)\nLabels: \([.labels[].name] | if length == 0 then ["none"] else . end | join(", "))"
+            ' > /tmp/uti_content.txt
           else
             NUMBER="${{ github.event.pull_request.number }}"
-            gh pr comment "$NUMBER" --repo "$REPO" --body "/uti auto-review"
+            AUTHOR="${{ github.event.pull_request.user.login }}"
+            EVENT_TYPE="pull_request"
+            gh api "repos/$REPO/pulls/$NUMBER" --jq '
+              "PR #\(.number): \(.title)\n\nBody:\n\(.body // "(no body)")\n\nBy: @\(.user.login) | +\(.additions)/-\(.deletions) in \(.changed_files) files\nBase: \(.base.ref) ← \(.head.ref)"
+            ' > /tmp/uti_content.txt
+            printf '\n\nDiff:\n' >> /tmp/uti_content.txt
+            gh api "repos/$REPO/pulls/$NUMBER" \
+              --header "Accept: application/vnd.github.diff" \
+              2>/dev/null | head -c 6000 >> /tmp/uti_content.txt
           fi
 
+          echo "number=$NUMBER" >> $GITHUB_OUTPUT
+          echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+          echo "event_type=$EVENT_TYPE" >> $GITHUB_OUTPUT
+
+      - name: Generate triage/review with AI
+        id: ai
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          AUTHOR="${{ steps.ctx.outputs.author }}"
+          EVENT_TYPE="${{ steps.ctx.outputs.event_type }}"
+          CONTENT=$(cat /tmp/uti_content.txt)
+
+          if [[ "$EVENT_TYPE" == "issue" ]]; then
+            TASK="Auto-triage this newly opened issue.
+Steps:
+1. Apply one label: bug, enhancement, question, documentation, or invalid
+2. Assess complexity:
+   - SIMPLE: typo fix, doc update, small config change, single-file edit with no logic change
+   - COMPLEX: logic change, multi-file change, architecture decision, unclear scope
+3. If COMPLEX: post clarifying questions. Mention that anyone can reply with /uti answer. Stop.
+4. If SIMPLE: describe your proposed approach in 2-3 sentences. Ask a collaborator to trigger /uti continue or /uti fix. Stop."
+          else
+            TASK="Auto-review this newly opened pull request.
+Steps:
+1. Read the diff carefully
+2. Post a structured review:
+   - Summary: 1-2 sentences on what the PR does
+   - Findings: each on its own line, severity-tagged (🚨 critical, ⚠️ high, INFO medium/low)
+   - For each finding: location, problem, suggested fix
+3. Make zero code changes — comment only
+4. If no issues found: ✅ and one-sentence summary"
+          fi
+
+          SYSTEM="You are Uti (Understand, Think, Implement) — KServe's codebase guardian. Sanskrit: help, protection, kindness. Direct warm teammate, never sycophantic. No 'great question', 'happy to help', 'certainly'. Emoji: 🚨 critical/security ONLY, ⚠️ high severity ONLY, ✅ clean result ONLY. End every response with '— Uti' on its own line."
+
+          # Build request JSON safely
+          REQUEST=$(jq -n \
+            --arg system "$SYSTEM" \
+            --arg task "$TASK" \
+            --arg author "$AUTHOR" \
+            --arg content "$CONTENT" \
+            '{
+              "model": "gpt-4o-mini",
+              "messages": [
+                {"role": "system", "content": $system},
+                {"role": "user", "content": ("Start your response by mentioning @" + $author + ".\n\nCURRENT TASK: " + $task + "\n\nCONTENT:\n" + $content)}
+              ],
+              "max_tokens": 1500
+            }')
+
+          curl -sf \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Content-Type: application/json" \
+            https://models.inference.ai.azure.com/chat/completions \
+            -d "$REQUEST" \
+            | jq -r '.choices[0].message.content' > /tmp/uti_response.txt
+
+      - name: Post response as Uti
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh issue comment "${{ steps.ctx.outputs.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "$(cat /tmp/uti_response.txt)"
+
+  # Slash command handler using opencode binary.
+  # Only runs for human users — opencode permission check passes for collaborators.
   uti:
     name: Uti
     if: |
-      (
+      github.event.sender.type != 'Bot' && (
         github.event_name == 'issue_comment' ||
         github.event_name == 'pull_request_review_comment'
       ) && (
@@ -58,9 +144,6 @@ jobs:
         contains(github.event.comment.body, '/opencode') ||
         contains(github.event.comment.body, '/uti') ||
         contains(github.event.comment.body, '@uti-kserve')
-      ) && (
-        github.event.sender.type != 'Bot' ||
-        github.event.sender.login == 'uti-kserve[bot]'
       )
     runs-on: ubuntu-latest
     permissions:
@@ -78,12 +161,9 @@ jobs:
         id: auth
         run: |
           ASSOCIATION="${{ github.event.comment.author_association }}"
-          SENDER_TYPE="${{ github.event.sender.type }}"
           BODY="${{ github.event.comment.body }}"
 
-          if [[ "$SENDER_TYPE" == "Bot" ]]; then
-            echo "authorized=true" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) answer'; then
+          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) answer'; then
             echo "authorized=true" >> $GITHUB_OUTPUT
           elif [[ "$ASSOCIATION" == "OWNER" || "$ASSOCIATION" == "MEMBER" || "$ASSOCIATION" == "COLLABORATOR" ]]; then
             echo "authorized=true" >> $GITHUB_OUTPUT
@@ -100,11 +180,7 @@ jobs:
         run: |
           BODY="${{ github.event.comment.body }}"
 
-          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) auto-triage'; then
-            echo "command=auto-triage" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) auto-review'; then
-            echo "command=auto-review" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) review'; then
+          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) review'; then
             echo "command=review" >> $GITHUB_OUTPUT
           elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) triage'; then
             echo "command=triage" >> $GITHUB_OUTPUT
@@ -125,6 +201,9 @@ jobs:
         with:
           app-id: ${{ secrets.UTI_APP_ID }}
           private-key: ${{ secrets.UTI_PRIVATE_KEY }}
+
+      - name: Export app token for opencode
+        run: echo "TOKEN=${{ steps.app-token.outputs.token }}" >> $GITHUB_ENV
 
       - name: Build Uti prompt
         id: prompt
@@ -161,39 +240,11 @@ jobs:
           - /uti continue — collaborators use to confirm and proceed"
 
           case "$COMMAND" in
-            auto-triage)
-              PROMPT="$BASE_PERSONA
-
-          CURRENT TASK: Auto-triage a newly opened issue.
-          Steps:
-          1. Read the issue title and body carefully
-          2. Apply one label: bug, enhancement, question, documentation, or invalid
-          3. Assess complexity:
-             - SIMPLE: typo fix, doc update, small config change, single-file edit with no logic
-             - COMPLEX: logic change, multi-file change, architecture decision, unclear scope
-          4. If COMPLEX: post clarifying questions. Mention that anyone can reply with /uti answer. Stop — do not implement anything.
-          5. If SIMPLE: post your proposed approach in 2-3 sentences. Tell a collaborator to trigger /uti continue or /uti fix to proceed. Stop — do not implement yet.
-          Start your response by mentioning @username (the issue opener)."
-              ;;
-            auto-review)
-              PROMPT="$BASE_PERSONA
-
-          CURRENT TASK: Auto-review a newly opened pull request.
-          Steps:
-          1. Read the full PR diff
-          2. Post a structured review comment:
-             - Summary: 1-2 sentences on what the PR does
-             - Findings: each on its own line, severity-tagged (🚨 critical, ⚠️ high, INFO for medium/low)
-             - For each finding: file:line, what the problem is, suggested fix with code snippet if helpful
-          3. Comment only — make zero code changes
-          4. If no issues found: say so with ✅ and one sentence summary
-          Start your response by mentioning @username (the PR author)."
-              ;;
             review)
               PROMPT="$BASE_PERSONA
 
           CURRENT TASK: Manual PR review triggered by a collaborator.
-          Same as auto-review: read the diff, post structured findings with severity tags, make zero code changes.
+          Read the diff, post structured findings with severity tags, make zero code changes.
           If no issues: ✅ and brief summary.
           Start your response by mentioning @username (the collaborator who triggered this)."
               ;;
@@ -201,7 +252,7 @@ jobs:
               PROMPT="$BASE_PERSONA
 
           CURRENT TASK: Manual triage triggered on an existing issue.
-          Same as auto-triage: apply a label, assess complexity, ask clarifying questions if complex, post proposed approach if simple.
+          Apply a label, assess complexity, ask clarifying questions if complex, post proposed approach if simple.
           Start your response by mentioning @username (the collaborator who triggered this)."
               ;;
             answer)
@@ -240,9 +291,6 @@ jobs:
           echo "prompt<<PROMPT_EOF" >> $GITHUB_OUTPUT
           echo "$PROMPT" >> $GITHUB_OUTPUT
           echo "PROMPT_EOF" >> $GITHUB_OUTPUT
-
-      - name: Export app token for opencode
-        run: echo "TOKEN=${{ steps.app-token.outputs.token }}" >> $GITHUB_ENV
 
       - name: Run opencode as Uti
         uses: anomalyco/opencode/github@latest
