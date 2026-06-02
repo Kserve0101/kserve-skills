@@ -20,8 +20,7 @@ jobs:
       ) && (
         contains(github.event.comment.body, '/oc') ||
         contains(github.event.comment.body, '/opencode') ||
-        contains(github.event.comment.body, '/uti') ||
-        contains(github.event.comment.body, '@uti-kserve')
+        contains(github.event.comment.body, '/uti')
       )
     runs-on: ubuntu-latest
     permissions:
@@ -41,7 +40,7 @@ jobs:
           ASSOCIATION="${{ github.event.comment.author_association }}"
           BODY="${{ github.event.comment.body }}"
 
-          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) answer'; then
+          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) answer'; then
             echo "authorized=true" >> $GITHUB_OUTPUT
           elif [[ "$ASSOCIATION" == "OWNER" || "$ASSOCIATION" == "MEMBER" || "$ASSOCIATION" == "COLLABORATOR" ]]; then
             echo "authorized=true" >> $GITHUB_OUTPUT
@@ -58,13 +57,13 @@ jobs:
         run: |
           BODY="${{ github.event.comment.body }}"
 
-          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) review'; then
+          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) review'; then
             echo "command=review" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) triage'; then
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) triage'; then
             echo "command=triage" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) answer'; then
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) answer'; then
             echo "command=answer" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) (fix|continue)'; then
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) (fix|continue)'; then
             echo "command=fix" >> $GITHUB_OUTPUT
           else
             echo "command=general" >> $GITHUB_OUTPUT
@@ -180,5 +179,5 @@ jobs:
           model: ${{ steps.parse.outputs.model }}
           variant: high
           use_github_token: "true"
-          mentions: "/oc,/opencode,/uti,@uti-kserve"
+          mentions: "/oc,/opencode,/uti"
           prompt: ${{ steps.prompt.outputs.prompt }}
