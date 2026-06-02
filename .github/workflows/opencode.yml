@@ -219,8 +219,8 @@ jobs:
 
       - name: Configure git identity
         run: |
-          git config --global user.name "uti-kserve"
-          git config --global user.email "uti@kserve"
+          git config --global user.name "uti-kserve[bot]"
+          git config --global user.email "289693063+uti-kserve[bot]@users.noreply.github.com"
 
       - name: Run opencode as Uti
         uses: anomalyco/opencode/github@latest
