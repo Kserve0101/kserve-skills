@@ -11,21 +11,58 @@ on:
     types: [created]
 
 concurrency:
-  group: opencode-${{ github.repository }}
+  group: opencode-${{ github.repository }}-${{ github.event.issue.number || github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
-  uti:
+  auto-trigger:
+    name: Post auto-trigger comment
     if: |
       github.event.sender.type != 'Bot' && (
         github.event_name == 'issues' ||
-        github.event_name == 'pull_request' ||
+        github.event_name == 'pull_request'
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Generate Uti app token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.UTI_APP_ID }}
+          private-key: ${{ secrets.UTI_PRIVATE_KEY }}
+
+      - name: Post trigger comment as Uti
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [[ "${{ github.event_name }}" == "issues" ]]; then
+            NUMBER="${{ github.event.issue.number }}"
+            gh issue comment "$NUMBER" --repo "$REPO" --body "/uti auto-triage"
+          else
+            NUMBER="${{ github.event.pull_request.number }}"
+            gh pr comment "$NUMBER" --repo "$REPO" --body "/uti auto-review"
+          fi
+
+  uti:
+    name: Uti
+    if: |
+      (
+        github.event_name == 'issue_comment' ||
+        github.event_name == 'pull_request_review_comment'
+      ) && (
         contains(github.event.comment.body, '/oc') ||
         contains(github.event.comment.body, '/opencode') ||
         contains(github.event.comment.body, '/uti') ||
         contains(github.event.comment.body, '/UTI') ||
         contains(github.event.comment.body, '/Uti') ||
         contains(github.event.comment.body, '@uti-kserve')
+      ) && (
+        github.event.sender.type != 'Bot' ||
+        github.event.sender.login == 'uti-kserve[bot]'
       )
     runs-on: ubuntu-latest
     permissions:
@@ -41,11 +78,14 @@ jobs:
 
       - name: Check collaborator permission
         id: auth
-        if: github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment'
         run: |
           ASSOCIATION="${{ github.event.comment.author_association }}"
+          SENDER_TYPE="${{ github.event.sender.type }}"
           BODY="${{ github.event.comment.body }}"
-          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) answer'; then
+
+          if [[ "$SENDER_TYPE" == "Bot" ]]; then
+            echo "authorized=true" >> $GITHUB_OUTPUT
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) answer'; then
             echo "authorized=true" >> $GITHUB_OUTPUT
           elif [[ "$ASSOCIATION" == "OWNER" || "$ASSOCIATION" == "MEMBER" || "$ASSOCIATION" == "COLLABORATOR" ]]; then
             echo "authorized=true" >> $GITHUB_OUTPUT
@@ -54,38 +94,32 @@ jobs:
           fi
 
       - name: Exit if unauthorized
-        if: |
-          (github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment') &&
-          steps.auth.outputs.authorized != 'true'
+        if: steps.auth.outputs.authorized != 'true'
         run: exit 0
 
       - name: Determine command and model
         id: parse
         run: |
-          EVENT="${{ github.event_name }}"
+          BODY="${{ github.event.comment.body }}"
 
-          if [[ "$EVENT" == "issues" ]]; then
+          if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) auto-triage'; then
             echo "command=auto-triage" >> $GITHUB_OUTPUT
-            echo "model=opencode-go/deepseek-v4-flash" >> $GITHUB_OUTPUT
-          elif [[ "$EVENT" == "pull_request" ]]; then
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) auto-review'; then
             echo "command=auto-review" >> $GITHUB_OUTPUT
-            echo "model=opencode-go/deepseek-v4-flash" >> $GITHUB_OUTPUT
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) review'; then
+            echo "command=review" >> $GITHUB_OUTPUT
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) triage'; then
+            echo "command=triage" >> $GITHUB_OUTPUT
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) answer'; then
+            echo "command=answer" >> $GITHUB_OUTPUT
+          elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti|@uti-kserve) (fix|continue)'; then
+            echo "command=fix" >> $GITHUB_OUTPUT
           else
-            BODY="${{ github.event.comment.body }}"
-            if echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) review'; then
-              echo "command=review" >> $GITHUB_OUTPUT
-            elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) triage'; then
-              echo "command=triage" >> $GITHUB_OUTPUT
-            elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) answer'; then
-              echo "command=answer" >> $GITHUB_OUTPUT
-            elif echo "$BODY" | grep -qiE '(/oc|/opencode|/uti) (fix|continue)'; then
-              echo "command=fix" >> $GITHUB_OUTPUT
-            else
-              echo "command=general" >> $GITHUB_OUTPUT
-            fi
-            MODEL=$(echo "$BODY" | grep -oP '(?<=--model )\S+' || echo "opencode-go/deepseek-v4-flash")
-            echo "model=${MODEL}" >> $GITHUB_OUTPUT
+            echo "command=general" >> $GITHUB_OUTPUT
           fi
+
+          MODEL=$(echo "$BODY" | grep -oP '(?<=--model )\S+' || echo "opencode-go/deepseek-v4-flash")
+          echo "model=${MODEL}" >> $GITHUB_OUTPUT
 
       - name: Generate Uti app token
         id: app-token
@@ -93,19 +127,6 @@ jobs:
         with:
           app-id: ${{ secrets.UTI_APP_ID }}
           private-key: ${{ secrets.UTI_PRIVATE_KEY }}
-
-      - name: Allow auto-triggers from all users
-        if: github.event_name == 'issues' || github.event_name == 'pull_request'
-        run: |
-          PATCHED=$(mktemp)
-          jq '
-            .sender.login = "uti-kserve[bot]" |
-            .sender.type = "Bot" |
-            if .issue then .issue.user.login = "uti-kserve[bot]" | .issue.user.type = "Bot" else . end |
-            if .pull_request then .pull_request.user.login = "uti-kserve[bot]" | .pull_request.user.type = "Bot" else . end
-          ' "$GITHUB_EVENT_PATH" > "$PATCHED"
-          echo "GITHUB_EVENT_PATH=$PATCHED" >> $GITHUB_ENV
-          echo "GITHUB_ACTOR=uti-kserve[bot]" >> $GITHUB_ENV
 
       - name: Build Uti prompt
         id: prompt
