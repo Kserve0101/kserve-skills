@@ -172,6 +172,11 @@ jobs:
           echo "$PROMPT" >> $GITHUB_OUTPUT
           echo "PROMPT_EOF" >> $GITHUB_OUTPUT
 
+      - name: Configure git identity
+        run: |
+          git config --global user.name "uti-kserve"
+          git config --global user.email "uti@kserve"
+
       - name: Run opencode as Uti
         uses: anomalyco/opencode/github@latest
         env:
