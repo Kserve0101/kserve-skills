@@ -1,5 +1,8 @@
 name: Uti
 
+run-name: >-
+  ${{ github.event_name == 'pull_request_review_comment' && format('PR #{0}', github.event.pull_request.number) || github.event.issue.pull_request && format('PR #{0}', github.event.issue.number) || format('Issue #{0}', github.event.issue.number) }}
+
 on:
   issue_comment:
     types: [created]
@@ -181,3 +184,25 @@ jobs:
           use_github_token: "true"
           mentions: "/oc,/opencode,/uti"
           prompt: ${{ steps.prompt.outputs.prompt }}
+
+      - name: Fix share URL in bot comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          NUMBER="${{ github.event.issue.number || github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+
+          COMMENT=$(gh api "repos/$REPO/issues/$NUMBER/comments" \
+            --jq '[.[] | select(.user.login == "uti-kserve[bot]")] | last')
+
+          COMMENT_ID=$(echo "$COMMENT" | jq -r '.id // empty')
+          [[ -z "$COMMENT_ID" ]] && exit 0
+
+          BODY=$(echo "$COMMENT" | jq -r '.body')
+          NEW_BODY=$(echo "$BODY" | sed 's|https://opencode\.ai/s/|https://opncd.ai/share/|g')
+
+          [[ "$NEW_BODY" == "$BODY" ]] && exit 0
+
+          gh api "repos/$REPO/issues/comments/$COMMENT_ID" \
+            -X PATCH -f body="$NEW_BODY"
