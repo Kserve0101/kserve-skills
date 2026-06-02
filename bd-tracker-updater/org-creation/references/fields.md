@@ -50,7 +50,7 @@ Submit as `"NA"` if not available. Never leave blank — always include in paylo
 | `numberOfCompanyBranches` | String | Total branch count | `"3"`, `"12"`, `"50+"` |
 | `Review` | String | Overall company review | 1–2 sentences summarising company quality, market reputation, or notable strengths/weaknesses |
 | `rating` | String | Overall product/service rating | 1–2 sentences describing rating and context. Example: `"Rated 4.2 on Google with strong customer satisfaction feedback"` |
-| `services` | String | KServe services to pitch | `"Customer Service, AI Bot"`, `"Lead Generation"` |
+| `services` | String | KServe services to pitch | `"Customer Service, AI Bot"` |
 | `customerCareNumber` | String | Company's customer care number | `"1800-260000"` |
 | `socialMedia` | String | Social media presence | Format: `"Platform - Follower count"`, comma-separated. Example: `"Instagram - 10K Followers, Linkedin - 5K Followers"` |
 | `Tracxn` | String | Tracxn platform rating | Number only. Example: `"4.5"` not `"4.5/5"` or `"Tracxn rating 4.5"` |

@@ -35,7 +35,7 @@ Compute a scored Ideal Customer Profile rating (0–100) for this company as a K
 | Review quality signal | Step 9 rating | 10 | Rating 1–4 (acute pain, high BPO need): 10 · 5–6 (moderate need): 7 · 7–10 (low pain): 3 · N/A: 4 |
 | Growth / change signal | M&A, funding, leadership change, expansion (Steps 14, 6) | 10 | Active growth/change: 10 · Stable: 5 · Contraction/freeze signal: 2 |
 | Decision-maker accessibility | BD-relevant director with LinkedIn profile accessible (Step 6) | 10 | ≥1 accessible: 10 · None accessible: 3 |
-| Job postings in KServe service areas | Active openings in CS, Collections, Back-Office, Lead Gen (Step 7B) | 10 | Active openings found: 10 · No postings found: 5 · Step not run: 3 |
+| Job postings in KServe service areas | Active openings in CS, Collections, Back-Office (Step 7B) | 10 | Active openings found: 10 · No postings found: 5 · Step not run: 3 |
 | Social presence | Active posting + meaningful follower base (Step 12) | 5 | Active (≥2×/month + above-threshold engagement): 5 · Inactive or very small: 0 |
 | Data confidence | Average confidence across Steps 2–9 (Step DATA QUALITY tally) | 5 | Mostly HIGH: 5 · Mixed: 3 · Mostly LOW/MED: 0 |
 

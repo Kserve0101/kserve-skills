@@ -28,7 +28,7 @@ Search for active job postings to reveal what functions the company is actively 
 - Top 3 functions with the most open roles (e.g., "Customer Support: 12, Back-Office: 5, Collections: 4")
 - Keywords in JDs that signal outsourcing pain: "manage high volume," "handle escalations," "coordinate with outsourcing vendor," "work with BPO partner," "process-driven," "high-throughput"
 - Attrition signals in JDs — flag separately from outsourcing pain: "replacement hire," "immediate joiners," "notice period buyout," "backfill," "high-volume hiring" (for the same role type repeatedly posted), "we are continuously hiring"
-- Roles that directly match KServe's services: Customer Service agents, Collections executives, Lead Generation reps, Data Entry / Back-Office Processing staff, Market Research analysts
+- Roles that directly match KServe's services: Customer Service agents, Collections executives, Data Entry / Back-Office Processing staff, Market Research analysts
 - Attrition signal: are any open roles in functions KServe serves phrased as replacement hires or immediate-joiner urgency? If yes, flag the function and the keyword found.
 
 **BD framing:** List 2–3 open roles most directly relevant to KServe's services:

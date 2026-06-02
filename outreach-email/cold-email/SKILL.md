@@ -25,7 +25,6 @@ KServe is an AI-powered Business Process Outsourcing (BPO) company headquartered
 
 | Service | What KServe does |
 |---|---|
-| **Lead Generation** | Identifies and sources potential customers for the client's sales pipeline |
 | **Lead Qualification** | Evaluates leads to determine fit, intent, and readiness to buy — so the client's sales team focuses only on high-value prospects |
 | **Customer Onboarding** | Manages the end-to-end process of welcoming and activating new customers on behalf of the client |
 | **Staff Augmentation** | Provides trained, dedicated staff who work as an extension of the client's own team — without the overhead of in-house hiring |
