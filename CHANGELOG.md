@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.13.0] — 2026-06-10
+
+### Added
+- **`linkedin-messaging` skill** — Send, read, and manage LinkedIn messages via the linkedin-scraper-mcp MCP server. Covers the full workflow: search people, view profiles, send messages (with mandatory dry-run), manage conversations, send connection requests, and close browser sessions. Includes MCP server setup instructions, one-time login procedure, tool reference, troubleshooting guide, and rate-limiting best practices.
+
+---
+
 ## [1.5.0] — 2026-05-29
 
 ### Added — AI Services (C5)
