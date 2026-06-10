@@ -18,6 +18,7 @@ npx skills add KServe-FMS/skills --skill company-research
 npx skills add KServe-FMS/skills --skill bd-tracker-updater
 npx skills add KServe-FMS/skills --skill apollo
 npx skills add KServe-FMS/skills --skill outreach-email
+npx skills add KServe-FMS/skills --skill linkedin-messaging
 ```
 
 ## Available Skills
@@ -28,6 +29,7 @@ npx skills add KServe-FMS/skills --skill outreach-email
 | `bd-tracker-updater` | Saves a company prospect to KServe's BD Tracker via webhook — extracts fields from a research report, raw data, or guided collection; validates, previews, and submits |
 | `apollo` | Calls Apollo.io APIs for sales intelligence — people enrichment from LinkedIn profile URLs via People Match API |
 | `outreach-email` | Generates personalized cold outreach emails to prospect decision-makers using company research data and DM contact details |
+| `linkedin-messaging` | Sends, reads, and manages LinkedIn messages via the linkedin-scraper-mcp MCP server — search people, view profiles, send messages with mandatory dry-run, manage conversations, and send connection requests |
 
 ---
 

@@ -21,6 +21,7 @@ Pure Markdown/YAML skills repo. No build step, no lint, no test, no typecheck. C
 | `bd-tracker-updater` | Simple — webhook submit with field validation |
 | `apollo` | Simple — single API call via env var `APOLLO_API_KEY` |
 | `outreach-email` | Simple — reads context, drafts email |
+| `linkedin-messaging` | Simple — MCP-based LinkedIn messaging: search people, send messages, manage conversations, connection requests |
 
 ## company-research architecture
 
