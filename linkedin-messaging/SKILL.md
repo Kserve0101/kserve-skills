@@ -23,8 +23,12 @@ dry-run step), managing conversations, and sending connection requests.
 ## Prerequisites
 
 - **Python 3.12+** with `uv` installed
+  - macOS/Linux: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+  - Windows (PowerShell): `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
 - **LinkedIn account** — one-time browser login, credentials never stored in config
 - **MCP-compatible client** — any MCP host (Claude Desktop, Cursor, VS Code, etc.)
+- **Supported platforms:** macOS, Linux, Windows — platform-specific notes are
+  included inline below and in the Troubleshooting table
 
 ## 🚫 Guardrails & Restrictions
 
@@ -42,6 +46,7 @@ The following tools provided by `linkedin-scraper-mcp` are **BLOCKED** — never
 ### Step 1: Install the server
 
 ```bash
+# Cross-platform (works in bash, PowerShell, cmd, or zsh)
 uvx linkedin-scraper-mcp@latest
 ```
 
@@ -50,6 +55,10 @@ Alternative via pip:
 ```bash
 pip install linkedin-scraper-mcp
 ```
+
+> **Windows users:** When configuring your MCP client (Step 2 below), the
+> command often needs a `cmd /c` wrapper. See the Troubleshooting table
+> row "Server won't start (Windows)" for the exact fix.
 
 ### Step 2: Register the MCP server
 
@@ -73,10 +82,22 @@ uvx linkedin-scraper-mcp@latest --login
 This opens a Chromium browser window. **Log into LinkedIn manually** in
 that window (email + password, 2FA if enabled, any captcha challenges).
 Once logged in, close the browser. The session is saved to
-`~/.linkedin-mcp/profile/` and reused automatically thereafter.
+`~/.linkedin-mcp/profile/` (`%USERPROFILE%\.linkedin-mcp\profile\` on
+Windows) and reused automatically thereafter.
 
 > **Re-auth**: If you get an `AuthenticationError`, the session has
-> expired. Re-run `uvx linkedin-scraper-mcp@latest --login`.
+> expired. Re-run `uvx linkedin-scraper-mcp@latest --login`. LinkedIn
+> sessions typically last **days to weeks** depending on activity. There
+> is **no automated re-login** — every re-auth requires manual browser
+> interaction (credentials, 2FA, or captcha).
+
+> **Headless/server deployments**: The login step **requires a desktop
+> display**. For servers/CI/Docker: log in on a desktop machine via
+> `--login`, then copy the `~/.linkedin-mcp/profile/` directory (or
+> `%USERPROFILE%\.linkedin-mcp\profile\` on Windows) to the target
+> machine at the same relative path. The session persists until it
+> expires, at which point you'll need to re-authenticate on a desktop
+> and re-copy the directory.
 
 ## Tool Reference
 
@@ -87,6 +108,8 @@ your MCP client — check your MCP client's tool listing for the actual names):
 |----------|------------|-------------|
 | `linkedin_search_people` | `keywords`, `location?`, `network?` | Find profiles by name, company, or keyword |
 | `linkedin_get_person_profile` | `linkedin_username`, `sections?` | Full profile details + `profile_urn` for reliable messaging |
+| `linkedin_get_my_profile` | `sections?`, `max_scrolls?` | Authenticated user's own profile |
+| `linkedin_search_companies` | `keywords` | Search for companies by name or keyword |
 | `linkedin_get_company_profile` | `company_name`, `sections?` | Company LinkedIn page details |
 | `linkedin_get_company_employees` | `company_name`, `keywords?` | Employee list with demographics (location, education, function) |
 | `linkedin_get_company_posts` | `company_name` | Recent posts from a company feed |
@@ -253,8 +276,17 @@ linkedin_get_company_posts(company_name="microsoft")
   Mention a specific post, shared connection, or mutual interest
 - **Connection notes ≤ 300 chars** — enforced server-side
 - **Close sessions** — always call `linkedin_close_session()` when done
-- **Protect your session** — `~/.linkedin-mcp/profile/` contains browser
-  cookies; anyone with access can act as you
+- **Protect your session directory** — `~/.linkedin-mcp/profile/`
+  (`%USERPROFILE%\.linkedin-mcp\profile\` on Windows) contains browser
+  cookies; anyone with access can act as you. Recommended:
+  - Restrict file permissions: `chmod 700 ~/.linkedin-mcp/profile/` (macOS/Linux)
+  - Exclude from cloud backups and dotfile repositories
+  - Never commit the directory or its contents to version control
+- **Rate-limiting is advisory only** — `linkedin-scraper-mcp` serializes tool
+  calls within a single process but does **not** enforce a minimum interval
+  between sends. It is the agent's/external caller's responsibility to respect
+  the 15-minute spacing between bulk sends. Violating rate limits can result
+  in temporary LinkedIn account restrictions.
 
 ## Troubleshooting
 
@@ -266,9 +298,10 @@ linkedin_get_company_posts(company_name="microsoft")
 | `recipient_resolution_failed` | Wrong username / ambiguous match | Fetch `profile_urn` via `get_person_profile` |
 | `compose_interact_failed` | LinkedIn UI changed | Retry once; then re-authenticate |
 | `send_failed` repeatedly | Rate-limited (too many sends too fast) | Wait ≥ 15 minutes, rephrase message, space sends |
-| Server won't start (Windows) | `uvx` not installed or path issue | Ensure `uv` is in PATH, use `cmd /c` wrapper |
-| Server won't start (Linux) | Missing Chromium deps | `sudo apt install -y chromium-browser` |
+| Server won't start (Windows) | `uvx` not installed or path issue | Ensure `uv` is in PATH. In your MCP client config, wrap the command as `cmd /c uvx linkedin-scraper-mcp@latest` (see Step 1 note above) |
+| Server won't start (Linux / Docker) | Missing Chromium system dependencies | `sudo apt install -y chromium-browser` (Debian/Ubuntu) or equivalent for your distro. For Docker, add this to your `RUN` layer: `apt-get update && apt-get install -y chromium-browser` |
 | Server won't start (macOS) | Xcode tools missing | `xcode-select --install` |
+| Login fails (headless/CI) | No display available for browser window | Log in on a desktop machine, copy `~/.linkedin-mcp/profile/` to the server (see Step 3 note above) |
 | No tools visible | MCP client not connected or config wrong | Verify MCP config syntax, check client logs |
 
 ## Quick-Start (Cheat Sheet)
