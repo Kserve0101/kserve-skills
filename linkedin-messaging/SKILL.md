@@ -32,10 +32,10 @@ The following tools provided by `linkedin-scraper-mcp` are **BLOCKED** — never
 
 | Blocked Tool | Why |
 |-------------|-----|
-| `search_jobs` | Job search is out of scope for messaging/networking |
-| `get_job_details` | Job details are out of scope for messaging/networking |
-| `get_sidebar_profiles` | Sidebar recommendations are noise, not direct search |
-| `get_feed` | Home feed scraping is out of scope for messaging/networking |
+| `linkedin_search_jobs` | Job search is out of scope for messaging/networking |
+| `linkedin_get_job_details` | Job details are out of scope for messaging/networking |
+| `linkedin_get_sidebar_profiles` | Sidebar recommendations are noise, not direct search |
+| `linkedin_get_feed` | Home feed scraping is out of scope for messaging/networking |
 
 ## MCP Server Setup
 
