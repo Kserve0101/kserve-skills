@@ -22,7 +22,7 @@ dry-run step), managing conversations, and sending connection requests.
 
 ## Prerequisites
 
-- **Python 3.10+** with `uv` installed
+- **Python 3.12+** with `uv` installed
 - **LinkedIn account** — one-time browser login, credentials never stored in config
 - **MCP-compatible client** — Hermes Agent, Claude Desktop, Cursor, VS Code (Cline/Continue), or any MCP host
 
@@ -97,7 +97,7 @@ your client — e.g., Hermes uses `mcp_linkedin_*`):
 
 | MCP Tool | Parameters | What It Does |
 |----------|------------|-------------|
-| `linkedin_search_people` | `keywords`, `location?` | Find profiles by name, company, or keyword |
+| `linkedin_search_people` | `keywords`, `location?`, `network?` | Find profiles by name, company, or keyword |
 | `linkedin_get_person_profile` | `linkedin_username`, `sections?` | Full profile details + `profile_urn` for reliable messaging |
 | `linkedin_get_company_profile` | `company_name`, `sections?` | Company LinkedIn page details |
 | `linkedin_get_company_employees` | `company_name`, `keywords?` | Employee list with demographics (location, education, function) |
