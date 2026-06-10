@@ -1,6 +1,6 @@
 {
   "name": "kserve-skills",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "KServe agent skills — AI-powered BD research and sales intelligence for BPO outreach",
   "author": "KServe <fms.mis@kserve.co.in> (https://kserve.co.in)",
   "homepage": "https://github.com/KServe-FMS/skills#readme",

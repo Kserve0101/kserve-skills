@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.14.0] — 2026-06-10
+
+### Changed
+- **`linkedin-messaging` skill** — refined scope and guardrails. Added blocked-tools table (`search_jobs`, `get_job_details`, `get_sidebar_profiles`, `get_feed`) to restrict scope to messaging/networking only. Removed client-specific config examples (Hermes Agent YAML, Claude Desktop JSON) in favor of generic MCP registration instructions. Removed job-search tool references and examples. Made naming and destructive-action warnings client-agnostic.
+
+---
+
 ## [1.13.0] — 2026-06-10
 
 ### Added

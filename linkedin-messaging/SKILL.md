@@ -24,7 +24,18 @@ dry-run step), managing conversations, and sending connection requests.
 
 - **Python 3.12+** with `uv` installed
 - **LinkedIn account** — one-time browser login, credentials never stored in config
-- **MCP-compatible client** — Hermes Agent, Claude Desktop, Cursor, VS Code (Cline/Continue), or any MCP host
+- **MCP-compatible client** — any MCP host (Claude Desktop, Cursor, VS Code, etc.)
+
+## 🚫 Guardrails & Restrictions
+
+The following tools provided by `linkedin-scraper-mcp` are **BLOCKED** — never invoke them:
+
+| Blocked Tool | Why |
+|-------------|-----|
+| `search_jobs` | Job search is out of scope for messaging/networking |
+| `get_job_details` | Job details are out of scope for messaging/networking |
+| `get_sidebar_profiles` | Sidebar recommendations are noise, not direct search |
+| `get_feed` | Home feed scraping is out of scope for messaging/networking |
 
 ## MCP Server Setup
 
@@ -40,39 +51,16 @@ Alternative via pip:
 pip install linkedin-scraper-mcp
 ```
 
-### Step 2: Add MCP server config
+### Step 2: Register the MCP server
 
-The config format depends on your client. For common ones:
+Register `linkedin-scraper-mcp` as an MCP server in your client. The server runs via:
 
-**Hermes Agent** — add to the config found via `hermes config path`:
-```yaml
-mcp_servers:
-  linkedin:
-    command: cmd
-    args:
-      - /c
-      - uvx
-      - linkedin-scraper-mcp@latest
-    env:
-      UV_HTTP_TIMEOUT: "300"
-    timeout: 300
-    connect_timeout: 120
+```
+uvx linkedin-scraper-mcp@latest
 ```
 
-**Claude Desktop** — in `claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "linkedin": {
-      "command": "uvx",
-      "args": ["linkedin-scraper-mcp@latest"]
-    }
-  }
-}
-```
-
-After adding, restart your client or reload MCP config. Verify tools appear
-(e.g., Hermes users run `hermes tools` and look for `mcp_linkedin_*`).
+Set the environment variable `UV_HTTP_TIMEOUT=300` to prevent timeout on first install.
+Refer to your MCP client's documentation for the exact config format and location.
 
 ### Step 3: One-time login
 
@@ -92,8 +80,8 @@ Once logged in, close the browser. The session is saved to
 
 ## Tool Reference
 
-The server exports these MCP tools (names may be prefixed depending on
-your client — e.g., Hermes uses `mcp_linkedin_*`):
+The server exports these MCP tools (tool names may be prefixed depending on
+your MCP client — check your MCP client's tool listing for the actual names):
 
 | MCP Tool | Parameters | What It Does |
 |----------|------------|-------------|
@@ -105,21 +93,9 @@ your client — e.g., Hermes uses `mcp_linkedin_*`):
 | `linkedin_get_inbox` | `limit=20` | List recent conversations (limit 1-50) |
 | `linkedin_get_conversation` | `linkedin_username?`, `thread_id?`, `index?` | Read a specific thread |
 | `linkedin_search_conversations` | `keywords`, `limit=10` | Full-text search across conversations |
-| `linkedin_search_jobs` | `keywords`, `location?`, filters | Search job postings |
-| `linkedin_get_job_details` | `job_id` | Get full job posting details |
 | `linkedin_send_message` | `linkedin_username`, `message`, `confirm_send`, `profile_urn?` | Send a message (dry-run by default) |
 | `linkedin_connect_with_person` | `linkedin_username`, `message?`, `profile_urn?` | Send a connection request + optional note |
-| `linkedin_get_sidebar_profiles` | `linkedin_username` | Get sidebar recommendations (profiles you may know) |
 | `linkedin_close_session` | — | Clean up browser session |
-
-### Naming by client
-
-| Client | Tool Prefix |
-|--------|------------|
-| **Hermes Agent** | `mcp_linkedin_*` |
-| **Claude Desktop** | `linkedin_*` |
-| **Cursor / Cline / Continue** | `linkedin_*` |
-| **Generic MCP** | As registered (no prefix) |
 
 ## Workflows
 
@@ -183,9 +159,8 @@ result = linkedin_send_message(
 
 Expected: `result["status"] == "sent"`, `result["sent"] == True`.
 
-> ⚠️ `confirm_send=True` is a **destructive action**. In some clients
-> (including Hermes Agent), the tool prompts for user confirmation
-> before firing. In others, it fires immediately — be deliberate.
+> ⚠️ `confirm_send=True` is a **destructive action**. Some MCP clients prompt for
+> user confirmation before firing; others fire immediately — be deliberate.
 
 #### 5. Verify delivery
 
@@ -264,9 +239,6 @@ linkedin_get_company_employees(company_name="microsoft", keywords="engineer")
 
 # Company posts
 linkedin_get_company_posts(company_name="microsoft")
-
-# Search jobs
-linkedin_search_jobs(keywords="software engineer", location="Remote", work_type="remote")
 ```
 
 ## Best Practices & Rate-Limiting
